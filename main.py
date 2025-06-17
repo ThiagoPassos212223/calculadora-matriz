@@ -10,13 +10,16 @@ def limparTela():
 def receberNumero(mensagem, fracao=False):
     while True:
         numero = input(mensagem)
+        if numero.lower() == "sair":
+            print("Operação cancelada.")
+            exit()
         try:
-            if fracao == True:
+            if fracao:
                 return Fraction(numero)
             else:
                 return int(numero)
         except:
-            if fracao == True:
+            if fracao:
                 print("Erro! Digite um número inteiro ou fração como 3/4")
             else: 
                 print("Erro! Insira um número inteiro!")
@@ -27,7 +30,7 @@ def mostrarMatriz(matriz, titulo=""):
     for linha in matriz:
         print("[", end=" ")
         for coluna in linha:
-            print(coluna, end=" ")
+            print(f"{str(coluna):>7}", end=" ")
         print("]")
     print("-" * 30)
 
@@ -36,55 +39,61 @@ class MatrizComum:
         self.matriz = []
 
     def adicionarElementos(self):
-        self.numero_linhas = receberNumero("insira o número de linhas: ")
-        self.numero_colunas = receberNumero("insira o número de colunas: ")
+        self.numero_linhas = receberNumero("Insira o número de linhas: ")
+        self.numero_colunas = receberNumero("Insira o número de colunas: ")
 
         for numero_linha in range(self.numero_linhas):
             elemento = []
             for numero_coluna in range(self.numero_colunas):
-                elemento.append(receberNumero(f"insira o elemento ({numero_linha},{numero_coluna}): ", True))
+                elemento.append(receberNumero(f"Insira o elemento ({numero_linha},{numero_coluna}): ", True))
             self.matriz.append(elemento)
 
     def encontrarDeterminante(self):
         determinante = 1
+        for n in range(self.numero_linhas):
+            determinante *= self.matriz[n][n]
         
-        try:
-        	for n in range(len(self.matriz)):
-        		determinante *= self.matriz[n][n]
-        		print(self.matriz[n][n])
-        except:
-        	for n in range(len(self.pivos)):
-        		determinante *= self.matriz[n][n]
-        		print(self.matriz[n][n])
-	  
-            
-        
+        # Aplica o efeito das trocas de linha
+        determinante *= (-1) ** self.trocas_linha
+
         if self.valores_usados != 0:
-        	self.determinante = determinante / self.valores_usados
+            self.determinante = determinante / self.valores_usados
         else:
             self.determinante = 0
 
     def escalonar(self):
         self.valores_usados = 1
-        self.pivos = []
+        self.trocas_linha = 0  # Conta quantas trocas de linha ocorreram
         mostrarMatriz(self.matriz, "Matriz original:")
 
         for posicao_pivo in range(self.numero_linhas - 1):
-            for numero_linha in range(self.numero_linhas):
-                if posicao_pivo < numero_linha:
-                    pivo = self.matriz[posicao_pivo][posicao_pivo]
-                    self.pivos.append(pivo)
-                    antipivo = self.matriz[numero_linha][posicao_pivo] * -1
-                    self.valores_usados *= pivo
+            pivo = self.matriz[posicao_pivo][posicao_pivo]
+            
+            # Se o pivô for zero, tenta trocar com uma linha abaixo
+            if pivo == 0:
+                for i in range(posicao_pivo + 1, self.numero_linhas):
+                    if self.matriz[i][posicao_pivo] != 0:
+                        print(f"Trocando linha {posicao_pivo + 1} com linha {i + 1}")
+                        self.matriz[posicao_pivo], self.matriz[i] = self.matriz[i], self.matriz[posicao_pivo]
+                        self.trocas_linha += 1
+                        pivo = self.matriz[posicao_pivo][posicao_pivo]
+                        break
+                else:
+                    print("Pivô zero detectado, não foi possível trocar linhas.")
+                    continue
 
-                    linha1 = self.matriz[posicao_pivo]
-                    linha2 = self.matriz[numero_linha]
+            for numero_linha in range(posicao_pivo + 1, self.numero_linhas):
+                fator_eliminacao = -self.matriz[numero_linha][posicao_pivo]
+                self.valores_usados *= pivo
 
-                    print(f"Operação: L{posicao_pivo + 1} * ({antipivo}) + L{numero_linha + 1} * ({pivo})")
+                linha_pivo = self.matriz[posicao_pivo]
+                linha_alvo = self.matriz[numero_linha]
 
-                    for numero_coluna in range(self.numero_colunas):
-                        resultado = (linha1[numero_coluna] * antipivo) + (linha2[numero_coluna] * pivo)
-                        self.matriz[numero_linha][numero_coluna] = resultado
+                print(f"Operação: L{posicao_pivo + 1} * ({fator_eliminacao}) + L{numero_linha + 1} * ({pivo})")
+
+                for numero_coluna in range(self.numero_colunas):
+                    resultado = (linha_pivo[numero_coluna] * fator_eliminacao) + (linha_alvo[numero_coluna] * pivo)
+                    self.matriz[numero_linha][numero_coluna] = resultado
 
             mostrarMatriz(self.matriz, f"Matriz (passo {posicao_pivo + 1}):")
 
@@ -196,20 +205,25 @@ class MatrizInversa:
 class Main:
     def __init__(self):
         while True:
-            modo = input("a)matriz comum    b)matriz inversa  \n escolha o modo: ")
-            if "a" in modo:
+            modo = input("a) Matriz comum    b) Matriz inversa    c) Sair \nEscolha o modo: ")
+            if modo.lower() == "a":
                 matriz = MatrizComum()
                 matriz.adicionarElementos()
                 matriz.escalonar()
                 matriz.encontrarDeterminante()
                 matriz.resolverSistema()
                 matriz.mostrarSolucao()
-            elif 'b' in modo:
+            elif modo.lower() == 'b':
                 matriz = MatrizInversa()
                 matriz.adicionarElementos()
                 matriz.escalonar()
                 matriz.exibirResultado()
                 matriz.extrairInversa()
+            elif modo.lower() == 'c':
+                print("Encerrando o programa...")
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
             limparTela()
 
 Main()

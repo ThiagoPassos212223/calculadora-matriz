@@ -89,7 +89,7 @@ class MatrizComum:
                 linha_pivo = self.matriz[posicao_pivo]
                 linha_alvo = self.matriz[numero_linha]
 
-                print(f"Operação: L{posicao_pivo + 1} * ({fator_eliminacao}) + L{numero_linha + 1} * ({pivo})")
+                print(f"Operação: L{numero_linha + 1} <-- L{posicao_pivo + 1} * ({fator_eliminacao}) + L{numero_linha + 1} * ({pivo})")
 
                 for numero_coluna in range(self.numero_colunas):
                     resultado = (linha_pivo[numero_coluna] * fator_eliminacao) + (linha_alvo[numero_coluna] * pivo)
